@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 
 def convolution(image, kernel):
@@ -11,7 +13,7 @@ def convolution(image, kernel):
     pad_height = k_height // 2
     pad_width = k_width // 2
     # Pad the image
-    padded_img = np.pad(image, ((pad_height, pad_height), (pad_width, pad_width)), mode='constant')
+    padded_img = pad_image(image, pad_height, pad_height, pad_width, pad_width)
     # Initialize result
     result = np.zeros(image.shape).astype(dtype=np.float32)
     # Perform convolution
@@ -19,6 +21,17 @@ def convolution(image, kernel):
         for j in range(width):
             result[i, j] = np.sum(padded_img[i:i + k_height, j:j + k_width] * kernel)
     return result
+
+
+def pad_image(image, top, bottom, left, right, value=0):
+    padded_image = []
+    for i in range(len(image) + top + bottom):
+        if top <= i < top + len(image):
+            padded_row = [value] * left + list(image[i - top]) + [value] * right
+        else:
+            padded_row = [value] * (len(image[0]) + left + right)
+        padded_image.append(padded_row)
+    return np.array(padded_image)
 
 
 def normalize_kernel(kernel):
@@ -75,11 +88,17 @@ def edge_detection(image):
     return edge_strength_image_scaled_uint8
 
 
-def threshold_edges(edge_strength_image, threshold_value=100):
+def threshold_edges(edge_strength_image, threshold_value = 56):
     # Perform thresholding
     edges_threshold = (edge_strength_image > threshold_value) * 255
     return edges_threshold
 
+def plot_histogram(image):
+    plt.hist(image.flatten(), bins=range(256), color='c')
+    plt.title('Image Histogram')
+    plt.xlabel('Pixel Value')
+    plt.ylabel('Frequency')
+    plt.show()
 
 # Load the image
 image = cv2.imread('kitty.bmp', cv2.IMREAD_GRAYSCALE)
@@ -100,6 +119,9 @@ print(smoothed_image_weighted_average)
 
 # Compute edge strength image
 edge_strength_image = edge_detection(image)
+
+# Plot histogram
+plot_histogram(edge_strength_image)
 
 # Threshold edges
 edges_threshold = threshold_edges(edge_strength_image)
